@@ -427,18 +427,13 @@
       requestAnimationFrame(step);
     }
 
-    // 点击 / 触摸一次屏幕 → 开启背景音乐（之后不会再关闭）
-function tryStartBgm(){
-  if (bgmHasStarted) return;
-  bgmHasStarted = true;
-  fadeInBgm(3500);
-  toast("✨ 背景音乐已开启");
-}
-
-// PC：click；手机 / 微信：touchstart 更稳
-document.addEventListener("click", tryStartBgm, { passive: true });
-document.addEventListener("touchstart", tryStartBgm, { passive: true });
-
+    // ★ 点击屏幕 / 鼠标一次，手动开启背景音乐；之后再点不会关闭
+    document.addEventListener("click", ()=>{
+      if (bgmHasStarted) return;
+      bgmHasStarted = true;
+      fadeInBgm(3500);
+      toast("✨ 背景音乐已开启");
+    });
 
     /* 黑客开场：打字机 + 数据雨 */
     const bootEl = document.getElementById('boot');
@@ -810,4 +805,3 @@ document.addEventListener("touchstart", tryStartBgm, { passive: true });
   </script>
 </body>
 </html>
-
