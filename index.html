@@ -408,32 +408,43 @@
     const rand = (a,b)=>a+Math.random()*(b-a);
     const pick = arr => arr[(Math.random()*arr.length)|0];
 
-    /* 背景音乐淡入控制（只手动开启，不会关闭） */
+    /* =========================
+       背景音乐：极简稳定版
+    ========================== */
     const bgm = document.getElementById("bgm");
-    let bgmTargetVolume = 0.6;   // 目标音量
-    let soundMuted = false;      // 只给烟花音效用，不再控制 BGM 开关
-    let bgmHasStarted = false;   // 是否已经手动开启过
-    bgm.volume = 0;
+    let soundMuted = false;        // 给烟花音效用的开关，暂时保持 false
+    let bgmStarted = false;        // 只用来控制 toast，不控制播放状态
 
-    function fadeInBgm(duration=4500){
-      const start = performance.now();
-      const p = bgm.play();
-      if (p && p.catch) p.catch(()=>{});
-      function step(now){
-        const t = Math.min(1, (now-start)/duration);
-        bgm.volume = bgmTargetVolume * t;
-        if (t < 1) requestAnimationFrame(step);
-      }
-      requestAnimationFrame(step);
+    if (bgm) {
+      bgm.loop = true;
+      bgm.volume = 0.8;            // 调整背景音乐音量（0~1）
     }
 
-    // ★ 点击屏幕 / 鼠标一次，手动开启背景音乐；之后再点不会关闭
-    document.addEventListener("click", ()=>{
-      if (bgmHasStarted) return;
-      bgmHasStarted = true;
-      fadeInBgm(3500);
-      toast("✨ 背景音乐已开启");
-    });
+    function startBgm() {
+      if (!bgm) return;
+      const playResult = bgm.play();
+      if (playResult && playResult.then) {
+        playResult.then(() => {
+          if (!bgmStarted) {
+            bgmStarted = true;
+            toast("✨ 背景音乐已开启");
+          }
+        }).catch(err => {
+          console.log("bgm 播放被拦截：", err);
+          // 不设置 bgmStarted = true，让用户可以再次点击重试
+        });
+      } else {
+        // 一些老浏览器不返回 Promise
+        if (!bgmStarted) {
+          bgmStarted = true;
+          toast("✨ 背景音乐已开启");
+        }
+      }
+    }
+
+    // PC 点击 + 手机触摸都算一次交互
+    document.addEventListener("click", startBgm);
+    document.addEventListener("touchstart", startBgm, { passive: true });
 
     /* 黑客开场：打字机 + 数据雨 */
     const bootEl = document.getElementById('boot');
@@ -497,7 +508,6 @@
       setTimeout(()=>{
         bootEl.style.display = "none";
         document.body.classList.add("ready");
-        // 不再自动播放音乐，只负责切场景
       },900);
     }
 
@@ -580,7 +590,7 @@
     seedBackgroundSparks();
     window.addEventListener("resize",seedBackgroundSparks,{passive:true});
 
-    /* 烟花音效 WebAudio（保留，可通过 F 改频率） */
+    /* 烟花音效 WebAudio */
     let audioEnabled = true;
     let audioCtx = null;
     function ensureAudio(){
@@ -801,7 +811,7 @@
       }
     });
 
-    /* 如何运行：保存为 index.html，和 bgm.mp3 放同一文件夹，双击即可打开（也可上传 GitHub Pages）。 */
+    /* 使用说明：保存为 index.html，与 bgm.mp3 放同一目录，上传到 GitHub Pages 即可 */
   </script>
 </body>
 </html>
